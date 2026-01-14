@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -29,11 +30,9 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 
     @Transactional
     @Override
-    public void register(RegisterRequest input) throws Exception {
-
+    public void register(RegisterRequest input) { // Eliminamos el 'throws Exception'
         if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-
-            throw new IllegalArgumentException("El nombre de usuario ya esta en uso.");
+            throw new IllegalArgumentException("El nombre de usuario ya está en uso.");
         }
 
         User user = User.builder()
@@ -49,18 +48,21 @@ public class AuthenticationServiceImpl implements AuthenticationService{
     @Override
     public AuthenticationResponse login(AuthenticationRequest input) {
 
+
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(input.getUsername(),input.getPassword())
+                new UsernamePasswordAuthenticationToken(input.getUsername(), input.getPassword())
         );
 
         User user = userRepository.findByUsername(input.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        HashMap<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRole());
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", user.getRole());
 
-        String jwtToken = jwtService.generateToken(new HashMap<>(), user);
+        String jwtToken = jwtService.generateToken(extraClaims, user);
 
-        return AuthenticationResponse.builder().token(jwtToken).build();
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
     }
 }

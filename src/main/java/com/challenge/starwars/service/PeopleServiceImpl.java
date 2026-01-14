@@ -6,6 +6,7 @@ import com.challenge.starwars.dto.external.SwapiPeopleSingleResponse;
 import com.challenge.starwars.dto.response.PeopleDetailResponse;
 import com.challenge.starwars.dto.response.PeoplePageResponse;
 import com.challenge.starwars.dto.response.PeopleSummaryResponse;
+import com.challenge.starwars.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,28 @@ public class PeopleServiceImpl implements PeopleService{
         this.restClient = restClient;
     }
 
-    @Override
     public PeopleDetailResponse getPersonById(String id) {
-
-        SwapiPeopleSingleResponse peopleResponse = restClient.get()
+        // 1. Definimos la llamada y cómo reaccionar a los errores de forma fluida
+        SwapiPeopleSingleResponse swapiResponse = restClient.get()
                 .uri("/people/{id}", id)
                 .retrieve()
+                // Si el código es 4xx (Cliente), lanzamos nuestra excepción de negocio
+                .onStatus(status -> status.is4xxClientError(), (request, response) -> {
+                    throw new ResourceNotFoundException("No se encontró el personaje con ID: " + id);
+                })
+                // Si el código es 5xx (Servidor externo), lanzamos un error general
+                .onStatus(status -> status.is5xxServerError(), (request, response) -> {
+                    throw new RuntimeException("El servicio de Star Wars no está disponible");
+                })
                 .body(SwapiPeopleSingleResponse.class);
 
-        if (peopleResponse == null || peopleResponse.getResult() == null) {
-            return null;
+        // 2. Validación de seguridad (Post-consumo)
+        if (swapiResponse == null || swapiResponse.getResult() == null) {
+            throw new ResourceNotFoundException("La respuesta de la API externa para el ID " + id + " está vacía");
         }
 
-        SwapiPeopleSingleResponse.PersonProperties properties = peopleResponse.getResult().getProperties();
+        // 3. Mapeo limpio usando Lombok Builder
+        var properties = swapiResponse.getResult().getProperties();
 
         return PeopleDetailResponse.builder()
                 .name(properties.getName())
@@ -59,6 +69,10 @@ public class PeopleServiceImpl implements PeopleService{
         SwapiPeoplePageResponse swapiResponse = restClient.get()
                 .uri(url)
                 .retrieve()
+
+                .onStatus(status -> status.isError(), (request, response) -> {
+                    throw new RuntimeException("Error al recuperar lista paginada de Star Wars");
+                })
                 .body(SwapiPeoplePageResponse.class);
 
         return mapToPageDto(swapiResponse);
@@ -69,9 +83,12 @@ public class PeopleServiceImpl implements PeopleService{
         SwapiPeopleSearchResponse searchResponse = restClient.get()
                 .uri(url)
                 .retrieve()
+
+                .onStatus(status -> status.isError(), (request, response) -> {
+                    throw new RuntimeException("Error en la búsqueda por nombre en la API externa");
+                })
                 .body(SwapiPeopleSearchResponse.class);
 
-        // DEFENSA: Manejo de resultados vacíos o nulos de la API externa
         if (searchResponse == null || searchResponse.getResult() == null || searchResponse.getResult().isEmpty()) {
             return createEmptyPageDto();
         }
