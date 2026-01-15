@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT",
-        description = "Pega aquí tu token JWT obtenido en el login"
+        description = "Pegar aquí el token JWT obtenido en el login"
 )
 public class OpenApiConfig {
 

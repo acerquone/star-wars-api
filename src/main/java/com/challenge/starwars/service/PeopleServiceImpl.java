@@ -26,26 +26,22 @@ public class PeopleServiceImpl implements PeopleService{
     }
 
     public PeopleDetailResponse getPersonById(String id) {
-        // 1. Definimos la llamada y cómo reaccionar a los errores de forma fluida
+
         SwapiPeopleSingleResponse swapiResponse = restClient.get()
                 .uri("/people/{id}", id)
                 .retrieve()
-                // Si el código es 4xx (Cliente), lanzamos nuestra excepción de negocio
                 .onStatus(status -> status.is4xxClientError(), (request, response) -> {
                     throw new ResourceNotFoundException("No se encontró el personaje con ID: " + id);
                 })
-                // Si el código es 5xx (Servidor externo), lanzamos un error general
                 .onStatus(status -> status.is5xxServerError(), (request, response) -> {
                     throw new RuntimeException("El servicio de Star Wars no está disponible");
                 })
                 .body(SwapiPeopleSingleResponse.class);
 
-        // 2. Validación de seguridad (Post-consumo)
         if (swapiResponse == null || swapiResponse.getResult() == null) {
             throw new ResourceNotFoundException("La respuesta de la API externa para el ID " + id + " está vacía");
         }
 
-        // 3. Mapeo limpio usando Lombok Builder
         var properties = swapiResponse.getResult().getProperties();
 
         return PeopleDetailResponse.builder()
@@ -105,7 +101,7 @@ public class PeopleServiceImpl implements PeopleService{
     }
 
     private PeoplePageResponse mapToPageDto(SwapiPeoplePageResponse swapiResponse) {
-        // Si la respuesta es nula, evitamos el NullPointerException
+
         if (swapiResponse == null || swapiResponse.getResults() == null) {
             return createEmptyPageDto();
         }
@@ -125,12 +121,11 @@ public class PeopleServiceImpl implements PeopleService{
     }
 
     private PeoplePageResponse mapSearchToPageDto(SwapiPeopleSearchResponse searchResponse) {
-        // Ya validamos la nulidad en el método searchPeopleByName,
-        // pero aquí realizamos la transformación final.
+
         List<PeopleSummaryResponse> results = searchResponse.getResult().stream()
                 .map(item -> PeopleSummaryResponse.builder()
                         .uid(item.getUid())
-                        // ACCESO A LA CAPA ANIDADA: Extraemos el nombre de properties
+
                         .name(item.getProperties() != null && item.getProperties().get("name") != null
                                 ? item.getProperties().get("name").toString() // Convertimos Object a String
                                 : "Unknown")
@@ -139,7 +134,7 @@ public class PeopleServiceImpl implements PeopleService{
 
         return PeoplePageResponse.builder()
                 .totalRecords(results.size())
-                .totalPages(1) // En búsquedas, swapi.tech suele devolver una sola lista
+                .totalPages(1)
                 .results(results)
                 .build();
     }

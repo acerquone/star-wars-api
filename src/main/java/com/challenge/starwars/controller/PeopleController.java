@@ -6,6 +6,7 @@ import com.challenge.starwars.service.PeopleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/people")
 @AllArgsConstructor
+@Tag(name = "Personajes")
 public class PeopleController {
 
     private final PeopleService peopleService;
@@ -28,6 +30,7 @@ public class PeopleController {
         return ResponseEntity.ok(peopleService.getPersonById(id));
     }
 
+    @Operation(summary = "Listado paginado de personajes")
     @GetMapping
     public ResponseEntity<PeoplePageResponse> getPeople(
             @RequestParam(required = false) String name,

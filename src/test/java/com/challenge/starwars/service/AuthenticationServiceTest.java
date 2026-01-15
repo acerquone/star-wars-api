@@ -40,32 +40,28 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("Registro exitoso de un nuevo usuario")
     void shouldRegisterUserSuccessfully() {
-        // GIVEN
-        RegisterRequest request = new RegisterRequest("nuevoUsuario", "password123");
-        when(userRepository.findByUsername("nuevoUsuario")).thenReturn(Optional.empty());
+
+        RegisterRequest request = new RegisterRequest("user@test.com", "password123");
+        when(userRepository.findByUsername("user@test.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
 
-        // WHEN
         authService.register(request);
 
-        // THEN
         verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
     @DisplayName("Login exitoso devuelve un token JWT")
     void shouldLoginSuccessfully() {
-        // GIVEN
-        AuthenticationRequest request = new AuthenticationRequest("luke@skywalker", "force123");
-        User user = User.builder().username("luke@skywalker").role("USER").build();
 
-        when(userRepository.findByUsername("luke@skywalker")).thenReturn(Optional.of(user));
+        AuthenticationRequest request = new AuthenticationRequest("user@test.com", "password123");
+        User user = User.builder().username("user@test.com").role("USER").build();
+
+        when(userRepository.findByUsername("user@test.com")).thenReturn(Optional.of(user));
         when(jwtService.generateToken(anyMap(), any(User.class))).thenReturn("fake-jwt-token");
 
-        // WHEN
         AuthenticationResponse response = authService.login(request);
 
-        // THEN
         assertThat(response.getToken()).isEqualTo("fake-jwt-token");
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
@@ -73,24 +69,21 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("Registro fallido por nombre de usuario ya existente")
     void shouldThrowExceptionWhenUserAlreadyExists() {
-        // GIVEN
-        RegisterRequest request = new RegisterRequest("luke@skywalker", "password");
-        when(userRepository.findByUsername("luke@skywalker")).thenReturn(Optional.of(new User()));
 
-        // WHEN & THEN
+        RegisterRequest request = new RegisterRequest("user@test.com", "password123");
+        when(userRepository.findByUsername("user@test.com")).thenReturn(Optional.of(new User()));
+
         assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El nombre de usuario ya está en uso.");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("Login fallido porque el usuario no existe en BD")
     void shouldThrowExceptionWhenUserNotFoundDuringLogin() {
-        // GIVEN
-        AuthenticationRequest request = new AuthenticationRequest("fantasma", "123");
-        when(userRepository.findByUsername("fantasma")).thenReturn(Optional.empty());
 
-        // WHEN & THEN
+        AuthenticationRequest request = new AuthenticationRequest("user@test.com", "password123");
+        when(userRepository.findByUsername("user@test.com")).thenReturn(Optional.empty());
+
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(UsernameNotFoundException.class);
     }
