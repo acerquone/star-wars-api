@@ -22,7 +22,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.authorizeHttpRequests(configurer -> configurer
-                .requestMatchers("/h2-console/**","/api/auth/**","/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/","/h2-console/**","/api/auth/**","/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/people/**").authenticated());
 
 
