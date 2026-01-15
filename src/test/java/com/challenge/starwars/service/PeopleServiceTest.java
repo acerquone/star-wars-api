@@ -131,7 +131,6 @@ class PeopleServiceTest {
                 .andRespond(withStatus(HttpStatus.NOT_FOUND));
 
 
-        // Verificamos que se lance la excepción correcta y tenga el mensaje esperado
         assertThatThrownBy(() -> peopleService.getPersonById(id))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("No se encontró el personaje");
