@@ -1,5 +1,6 @@
 package com.challenge.starwars.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RegisterRequest {
 
+    @Schema(example = "usuario@correo.com", description = "Debe ser un correo electrónico con formato válido")
     @NotEmpty(message = "El nombre de usuario es requerido")
     @Email(message = "Formato de email invalido")
     private String username;
