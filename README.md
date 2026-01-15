@@ -40,7 +40,7 @@ La aplicación está preparada para ser configurada externamente sin modificar e
 
 * **Puerto del servidor:** `server.port` (Por defecto: 8080).
 * **Configuración de Seguridad:** Tiempo de expiración y clave secreta del JWT.
-* **Base de Datos:** Aunque el proyecto utiliza H2 en memoria, es posible conectar una base de datos externa (PostgreSQL/MySQL) modificando los parámetros del `datasource`.
+* **Base de Datos:** Aunque el proyecto utiliza H2 basada en archivos, es posible conectar una base de datos externa (PostgreSQL/MySQL) modificando los parámetros del `datasource`.
 * **Integración Externa:** Para este challenge, la URL base de SWAPI se ha mantenido en una constante dentro del cliente de servicio para garantizar la estabilidad de las pruebas. En una arquitectura de producción, este parámetro se externalizaría al `application.properties` para permitir el cambio de entorno (Staging/Production) sin recompilar.
 
 ## Ejecución en Local
